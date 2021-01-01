@@ -1,0 +1,18 @@
+//@version=4
+strategy(title="Moving average strategy backtesting!", overlay=true)
+start = timestamp(2015,6,1,0,0)
+end = timestamp(2020,1,1,0,0)
+
+ema20 = ema(close, 20)
+ema50 = ema(close, 50)
+long = ema20 > ema50
+short = ema20 < ema50
+
+plot(ema20, color=color.orange, linewidth=2)
+plot(ema50, color=color.purple, linewidth=2)
+
+if time >= start and time <=end
+    strategy.entry("Long", strategy.long, 1000.0, when = long)
+    strategy.entry("Short", strategy.short, 1000.0, when = short)
+strategy.close("Long", when = short)
+strategy.close("Short", when = long)
