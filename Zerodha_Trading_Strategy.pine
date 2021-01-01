@@ -1,0 +1,275 @@
+//@version=4
+study("Zerodha Trading Strategy", overlay=true)
+//Condition 1: Identify candlestick pattern in the opportunity universe
+//Bullish Marubozu:
+C_Len_bullish_marubozu = 14 // ema depth for bodyAvg
+C_ShadowPercent_bullish_marubozu = 5.0 // size of shadows
+C_ShadowEqualsPercent_bullish_marubozu = 100.0
+C_DojiBodyPercent_bullish_marubozu = 5.0
+C_Factor_bullish_marubozu = 2.0 // shows the number of times the shadow dominates the candlestick body
+
+C_BodyHi_bullish_marubozu = max(close, open)
+C_BodyLo_bullish_marubozu = min(close, open)
+C_Body_bullish_marubozu = C_BodyHi_bullish_marubozu - C_BodyLo_bullish_marubozu
+C_BodyAvg_bullish_marubozu = ema(C_Body_bullish_marubozu, C_Len_bullish_marubozu)
+C_SmallBody_bullish_marubozu = C_Body_bullish_marubozu < C_BodyAvg_bullish_marubozu
+C_LongBody_bullish_marubozu = C_Body_bullish_marubozu > C_BodyAvg_bullish_marubozu
+C_UpShadow_bullish_marubozu = high - C_BodyHi_bullish_marubozu
+C_DnShadow_bullish_marubozu = C_BodyLo_bullish_marubozu - low
+C_HasUpShadow_bullish_marubozu = C_UpShadow_bullish_marubozu > C_ShadowPercent_bullish_marubozu / 100 * C_Body_bullish_marubozu
+C_HasDnShadow_bullish_marubozu = C_DnShadow_bullish_marubozu > C_ShadowPercent_bullish_marubozu / 100 * C_Body_bullish_marubozu
+C_WhiteBody_bullish_marubozu = open < close
+C_BlackBody_bullish_marubozu = open > close
+C_Range_bullish_marubozu = high-low
+C_IsInsideBar_bullish_marubozu = C_BodyHi_bullish_marubozu[1] > C_BodyHi_bullish_marubozu and C_BodyLo_bullish_marubozu[1] < C_BodyLo_bullish_marubozu
+C_BodyMiddle_bullish_marubozu = C_Body_bullish_marubozu / 2 + C_BodyLo_bullish_marubozu
+C_ShadowEquals_bullish_marubozu = C_UpShadow_bullish_marubozu == C_DnShadow_bullish_marubozu or (abs(C_UpShadow_bullish_marubozu - C_DnShadow_bullish_marubozu) / C_DnShadow_bullish_marubozu * 100) < C_ShadowEqualsPercent_bullish_marubozu and (abs(C_DnShadow_bullish_marubozu - C_UpShadow_bullish_marubozu) / C_UpShadow_bullish_marubozu * 100) < C_ShadowEqualsPercent_bullish_marubozu
+C_IsDojiBody_bullish_marubozu = C_Range_bullish_marubozu > 0 and C_Body_bullish_marubozu <= C_Range_bullish_marubozu * C_DojiBodyPercent_bullish_marubozu / 100
+C_Doji_bullish_marubozu = C_IsDojiBody_bullish_marubozu and C_ShadowEquals_bullish_marubozu
+
+patternLabelPosLow_bullish_marubozu = low - (atr(30) * 0.6)
+patternLabelPosHigh_bullish_marubozu = high + (atr(30) * 0.6)
+
+C_MarubozuWhiteBullishNumberOfCandles_bullish_marubozu = 1
+C_MarubozuShadowPercentWhite_bullish_marubozu = 5.0
+C_MarubozuWhiteBullish_bullish_marubozu = C_WhiteBody_bullish_marubozu and C_LongBody_bullish_marubozu and C_UpShadow_bullish_marubozu <= C_MarubozuShadowPercentWhite_bullish_marubozu/100*C_Body_bullish_marubozu and C_DnShadow_bullish_marubozu <= C_MarubozuShadowPercentWhite_bullish_marubozu/100*C_Body_bullish_marubozu and C_WhiteBody_bullish_marubozu
+alertcondition(C_MarubozuWhiteBullish_bullish_marubozu, title = "Marubozu White_bullish_marubozu", message = "New Marubozu White - Bullish pattern detected.")
+if C_MarubozuWhiteBullish_bullish_marubozu
+    var ttBullishMarubozuWhite_bullish_marubozu = "Marubozu White\nA Marubozu White Candle is a candlestick that does not have a shadow that extends from its candle body at either the open or the close. Marubozu is Japanese for “close-cropped” or “close-cut.” Other sources may call it a Bald or Shaven Head Candle."
+    label.new(bar_index, patternLabelPosLow_bullish_marubozu, text="MW", style=label.style_label_up, color = color.blue, textcolor=color.white, tooltip = ttBullishMarubozuWhite_bullish_marubozu)
+bgcolor(highest(C_MarubozuWhiteBullish_bullish_marubozu?1:0, C_MarubozuWhiteBullishNumberOfCandles_bullish_marubozu)!=0 ? color.blue : na, offset=-(C_MarubozuWhiteBullishNumberOfCandles_bullish_marubozu-1))
+//Bearish Marubozu
+C_Len_bearish_marubozu = 14 // ema depth for bodyAvg
+C_ShadowPercent_bearish_marubozu = 5.0 // size of shadows
+C_ShadowEqualsPercent_bearish_marubozu = 100.0
+C_DojiBodyPercent_bearish_marubozu = 5.0
+C_Factor_bearish_marubozu = 2.0 // shows the number of times the shadow dominates the candlestick body
+
+C_BodyHi_bearish_marubozu = max(close, open)
+C_BodyLo_bearish_marubozu = min(close, open)
+C_Body_bearish_marubozu = C_BodyHi_bearish_marubozu - C_BodyLo_bearish_marubozu
+C_BodyAvg_bearish_marubozu = ema(C_Body_bearish_marubozu, C_Len_bearish_marubozu)
+C_SmallBody_bearish_marubozu = C_Body_bearish_marubozu < C_BodyAvg_bearish_marubozu
+C_LongBody_bearish_marubozu = C_Body_bearish_marubozu > C_BodyAvg_bearish_marubozu
+C_UpShadow_bearish_marubozu = high - C_BodyHi_bearish_marubozu
+C_DnShadow_bearish_marubozu = C_BodyLo_bearish_marubozu - low
+C_HasUpShadow_bearish_marubozu = C_UpShadow_bearish_marubozu > C_ShadowPercent_bearish_marubozu / 100 * C_Body_bearish_marubozu
+C_HasDnShadow_bearish_marubozu = C_DnShadow_bearish_marubozu > C_ShadowPercent_bearish_marubozu / 100 * C_Body_bearish_marubozu
+C_WhiteBody_bearish_marubozu = open < close
+C_BlackBody_bearish_marubozu = open > close
+C_Range_bearish_marubozu = high-low
+C_IsInsideBar_bearish_marubozu = C_BodyHi_bearish_marubozu[1] > C_BodyHi_bearish_marubozu and C_BodyLo_bearish_marubozu[1] < C_BodyLo_bearish_marubozu
+C_BodyMiddle_bearish_marubozu = C_Body_bearish_marubozu / 2 + C_BodyLo_bearish_marubozu
+C_ShadowEquals_bearish_marubozu = C_UpShadow_bearish_marubozu == C_DnShadow_bearish_marubozu or (abs(C_UpShadow_bearish_marubozu - C_DnShadow_bearish_marubozu) / C_DnShadow_bearish_marubozu * 100) < C_ShadowEqualsPercent_bearish_marubozu and (abs(C_DnShadow_bearish_marubozu - C_UpShadow_bearish_marubozu) / C_UpShadow_bearish_marubozu * 100) < C_ShadowEqualsPercent_bearish_marubozu
+C_IsDojiBody_bearish_marubozu = C_Range_bearish_marubozu > 0 and C_Body_bearish_marubozu <= C_Range_bearish_marubozu * C_DojiBodyPercent_bearish_marubozu / 100
+C_Doji_bearish_marubozu = C_IsDojiBody_bearish_marubozu and C_ShadowEquals_bearish_marubozu
+
+patternLabelPosLow_bearish_marubozu = low - (atr(30) * 0.6)
+patternLabelPosHigh_bearish_marubozu = high + (atr(30) * 0.6)
+
+C_MarubozuBlackBearishNumberOfCandles_bearish_marubozu = 1
+C_MarubozuShadowPercentBearish_bearish_marubozu = 5.0
+C_MarubozuBlackBearish_bearish_marubozu = C_BlackBody_bearish_marubozu and C_LongBody_bearish_marubozu and C_UpShadow_bearish_marubozu <= C_MarubozuShadowPercentBearish_bearish_marubozu/100*C_Body_bearish_marubozu and C_DnShadow_bearish_marubozu <= C_MarubozuShadowPercentBearish_bearish_marubozu/100*C_Body_bearish_marubozu and C_BlackBody_bearish_marubozu
+alertcondition(C_MarubozuBlackBearish_bearish_marubozu, title = "Marubozu Black_bearish_marubozu", message = "New Marubozu Black - Bearish pattern detected.")
+if C_MarubozuBlackBearish_bearish_marubozu
+    var ttBearishMarubozuBlack_bearish_marubozu = "Marubozu Black\nThis is a candlestick that has no shadow, which extends from the red-bodied candle at the open, the close, or even at both. In Japanese, the name means “close-cropped” or “close-cut.” The candlestick can also be referred to as Bald or Shaven Head."
+    label.new(bar_index, patternLabelPosHigh_bearish_marubozu, text="MB", style=label.style_label_down, color = color.red, textcolor=color.white, tooltip = ttBearishMarubozuBlack_bearish_marubozu)
+bgcolor(highest(C_MarubozuBlackBearish_bearish_marubozu?1:0, C_MarubozuBlackBearishNumberOfCandles_bearish_marubozu)!=0 ? color.red : na, offset=-(C_MarubozuBlackBearishNumberOfCandles_bearish_marubozu-1))
+//Spinning Top Bullish
+C_Len_spt_bu = 14 // ema depth for bodyAvg
+C_ShadowPercent_spt_bu = 5.0 // size of shadows
+C_ShadowEqualsPercent_spt_bu = 100.0
+C_DojiBodyPercent_spt_bu = 5.0
+C_Factor_spt_bu = 2.0 // shows the number of times the shadow dominates the candlestick body
+
+C_BodyHi_spt_bu = max(close, open)
+C_BodyLo_spt_bu = min(close, open)
+C_Body_spt_bu = C_BodyHi_spt_bu - C_BodyLo_spt_bu
+C_BodyAvg_spt_bu = ema(C_Body_spt_bu, C_Len_spt_bu)
+C_SmallBody_spt_bu = C_Body_spt_bu < C_BodyAvg_spt_bu
+C_LongBody_spt_bu = C_Body_spt_bu > C_BodyAvg_spt_bu
+C_UpShadow_spt_bu = high - C_BodyHi_spt_bu
+C_DnShadow_spt_bu = C_BodyLo_spt_bu - low
+C_HasUpShadow_spt_bu = C_UpShadow_spt_bu > C_ShadowPercent_spt_bu / 100 * C_Body_spt_bu
+C_HasDnShadow_spt_bu = C_DnShadow_spt_bu > C_ShadowPercent_spt_bu / 100 * C_Body_spt_bu
+C_WhiteBody_spt_bu = open < close
+C_BlackBody_spt_bu = open > close
+C_Range_spt_bu = high-low
+C_IsInsideBar_spt_bu = C_BodyHi_spt_bu[1] > C_BodyHi_spt_bu and C_BodyLo_spt_bu[1] < C_BodyLo_spt_bu
+C_BodyMiddle_spt_bu = C_Body_spt_bu / 2 + C_BodyLo_spt_bu
+C_ShadowEquals_spt_bu = C_UpShadow_spt_bu == C_DnShadow_spt_bu or (abs(C_UpShadow_spt_bu - C_DnShadow_spt_bu) / C_DnShadow_spt_bu * 100) < C_ShadowEqualsPercent_spt_bu and (abs(C_DnShadow_spt_bu - C_UpShadow_spt_bu) / C_UpShadow_spt_bu * 100) < C_ShadowEqualsPercent_spt_bu
+C_IsDojiBody_spt_bu = C_Range_spt_bu > 0 and C_Body_spt_bu <= C_Range_spt_bu * C_DojiBodyPercent_spt_bu / 100
+C_Doji_spt_bu = C_IsDojiBody_spt_bu and C_ShadowEquals_spt_bu
+patternLabelPosLow_spt_bu = low - (atr(30) * 0.6)
+patternLabelPosHigh_spt_bu = high + (atr(30) * 0.6)
+
+C_SpinningTopWhiteNumberOfCandles_spt_bu = 1
+C_SpinningTopWhitePercent_spt_bu = 34.0
+C_IsSpinningTopWhite_spt_bu = C_DnShadow_spt_bu >= C_Range_spt_bu / 100 * C_SpinningTopWhitePercent_spt_bu and C_UpShadow_spt_bu >= C_Range_spt_bu / 100 * C_SpinningTopWhitePercent_spt_bu and not C_IsDojiBody_spt_bu
+C_SpinningTopWhite_spt_bu = C_IsSpinningTopWhite_spt_bu and C_WhiteBody_spt_bu
+alertcondition(C_SpinningTopWhite_spt_bu, title = "Spinning Top White_spt_bu", message = "New Spinning Top White pattern detected.")
+if C_SpinningTopWhite_spt_bu
+    var ttSpinningTopWhite_spt_bu = "Spinning Top White\nWhite spinning tops are candlestick lines that are small, green-bodied, and possess shadows (upper and lower) that end up exceeding the length of candle bodies. They often signal indecision between buyer and seller."
+    label.new(bar_index, patternLabelPosLow_spt_bu, text="STW", style=label.style_label_up, color = color.gray, textcolor=color.white, tooltip = ttSpinningTopWhite_spt_bu)
+bgcolor(highest(C_SpinningTopWhite_spt_bu?1:0, C_SpinningTopWhiteNumberOfCandles_spt_bu)!=0 ? color.gray : na, offset=-(C_SpinningTopWhiteNumberOfCandles_spt_bu-1))
+//Spinning Top Bearish
+C_Len_spt_be = 14 // ema depth for bodyAvg
+C_ShadowPercent_spt_be = 5.0 // size of shadows
+C_ShadowEqualsPercent_spt_be = 100.0
+C_DojiBodyPercent_spt_be = 5.0
+C_Factor_spt_be = 2.0 // shows the number of times the shadow dominates the candlestick body
+
+C_BodyHi_spt_be = max(close, open)
+C_BodyLo_spt_be = min(close, open)
+C_Body_spt_be = C_BodyHi_spt_be - C_BodyLo_spt_be
+C_BodyAvg_spt_be = ema(C_Body_spt_be, C_Len_spt_be)
+C_SmallBody_spt_be = C_Body_spt_be < C_BodyAvg_spt_be
+C_LongBody_spt_be = C_Body_spt_be > C_BodyAvg_spt_be
+C_UpShadow_spt_be = high - C_BodyHi_spt_be
+C_DnShadow_spt_be = C_BodyLo_spt_be - low
+C_HasUpShadow_spt_be = C_UpShadow_spt_be > C_ShadowPercent_spt_be / 100 * C_Body_spt_be
+C_HasDnShadow_spt_be = C_DnShadow_spt_be > C_ShadowPercent_spt_be / 100 * C_Body_spt_be
+C_WhiteBody_spt_be = open < close
+C_BlackBody_spt_be = open > close
+C_Range_spt_be = high-low
+C_IsInsideBar_spt_be = C_BodyHi_spt_be[1] > C_BodyHi_spt_be and C_BodyLo_spt_be[1] < C_BodyLo_spt_be
+C_BodyMiddle_spt_be = C_Body_spt_be / 2 + C_BodyLo_spt_be
+C_ShadowEquals_spt_be = C_UpShadow_spt_be == C_DnShadow_spt_be or (abs(C_UpShadow_spt_be - C_DnShadow_spt_be) / C_DnShadow_spt_be * 100) < C_ShadowEqualsPercent_spt_be and (abs(C_DnShadow_spt_be - C_UpShadow_spt_be) / C_UpShadow_spt_be * 100) < C_ShadowEqualsPercent_spt_be
+C_IsDojiBody_spt_be = C_Range_spt_be > 0 and C_Body_spt_be <= C_Range_spt_be * C_DojiBodyPercent_spt_be / 100
+C_Doji_spt_be = C_IsDojiBody_spt_be and C_ShadowEquals_spt_be
+
+patternLabelPosLow_spt_be = low - (atr(30) * 0.6)
+patternLabelPosHigh_spt_be = high + (atr(30) * 0.6)
+
+C_SpinningTopBlackNumberOfCandles_spt_be = 1
+C_SpinningTopBlackPercent_spt_be = 34.0
+C_IsSpinningTop_spt_be = C_DnShadow_spt_be >= C_Range_spt_be / 100 * C_SpinningTopBlackPercent_spt_be and C_UpShadow_spt_be >= C_Range_spt_be / 100 * C_SpinningTopBlackPercent_spt_be and not C_IsDojiBody_spt_be
+C_SpinningTopBlack_spt_be = C_IsSpinningTop_spt_be and C_BlackBody_spt_be
+alertcondition(C_SpinningTopBlack_spt_be, title = "Spinning Top Black_spt_be", message = "New Spinning Top Black pattern detected.")
+if C_SpinningTopBlack_spt_be
+    var ttSpinningTopBlack_spt_be = "Spinning Top Black\nBlack spinning tops are candlestick lines that are small, red-bodied, and possess shadows (upper and lower) that end up exceeding the length of candle bodies. They often signal indecision."
+    label.new(bar_index, patternLabelPosLow_spt_be, text="STB", style=label.style_label_up, color = color.gray, textcolor=color.white, tooltip = ttSpinningTopBlack_spt_be)
+bgcolor(highest(C_SpinningTopBlack_spt_be?1:0, C_SpinningTopBlackNumberOfCandles_spt_be)!=0 ? color.gray : na, offset=-(C_SpinningTopBlackNumberOfCandles_spt_be-1))
+//Doji
+C_Len_doji = 14 // ema depth for bodyAvg
+C_ShadowPercent_doji = 5.0 // size of shadows
+C_ShadowEqualsPercent_doji = 100.0
+C_DojiBodyPercent_doji = 5.0
+C_Factor_doji = 2.0 // shows the number of times the shadow dominates the candlestick body
+
+C_BodyHi_doji = max(close, open)
+C_BodyLo_doji = min(close, open)
+C_Body_doji = C_BodyHi_doji - C_BodyLo_doji
+C_BodyAvg_doji = ema(C_Body_doji, C_Len_doji)
+C_SmallBody_doji = C_Body_doji < C_BodyAvg_doji
+C_LongBody_doji = C_Body_doji > C_BodyAvg_doji
+C_UpShadow_doji = high - C_BodyHi_doji
+C_DnShadow_doji = C_BodyLo_doji - low
+C_HasUpShadow_doji = C_UpShadow_doji > C_ShadowPercent_doji / 100 * C_Body_doji
+C_HasDnShadow_doji = C_DnShadow_doji > C_ShadowPercent_doji / 100 * C_Body_doji
+C_WhiteBody_doji = open < close
+C_BlackBody_doji = open > close
+C_Range_doji = high-low
+C_IsInsideBar_doji = C_BodyHi_doji[1] > C_BodyHi_doji and C_BodyLo_doji[1] < C_BodyLo_doji
+C_BodyMiddle_doji = C_Body_doji / 2 + C_BodyLo_doji
+C_ShadowEquals_doji = C_UpShadow_doji == C_DnShadow_doji or (abs(C_UpShadow_doji - C_DnShadow_doji) / C_DnShadow_doji * 100) < C_ShadowEqualsPercent_doji and (abs(C_DnShadow_doji - C_UpShadow_doji) / C_UpShadow_doji * 100) < C_ShadowEqualsPercent_doji
+C_IsDojiBody_doji = C_Range_doji > 0 and C_Body_doji <= C_Range_doji * C_DojiBodyPercent_doji / 100
+C_Doji_doji = C_IsDojiBody_doji and C_ShadowEquals_doji
+
+patternLabelPosLow_doji = low - (atr(30) * 0.6)
+patternLabelPosHigh_doji = high + (atr(30) * 0.6)
+
+C_DojiNumberOfCandles_doji = 1
+C_DragonflyDoji_doji = C_IsDojiBody_doji and C_UpShadow_doji <= C_Body_doji
+C_GravestoneDojiOne_doji = C_IsDojiBody_doji and C_DnShadow_doji <= C_Body_doji
+alertcondition(C_Doji_doji and not C_DragonflyDoji_doji and not C_GravestoneDojiOne_doji, title = "Doji", message = "New Doji pattern detected.")
+if C_Doji_doji and not C_DragonflyDoji_doji and not C_GravestoneDojiOne_doji
+    var ttDoji_doji = "Doji\nWhen the open and close of a security are essentially equal to each other, a doji candle forms. The length of both upper and lower shadows may vary, causing the candlestick you are left with to either resemble a cross, an inverted cross, or a plus sign. Doji candles show the playout of buyer-seller indecision in a tug-of-war of sorts. As price moves either above or below the opening level during the session, the close is either at or near the opening level."
+    label.new(bar_index, patternLabelPosLow_doji, text="D", style=label.style_label_up, color = color.gray, textcolor=color.white, tooltip = ttDoji_doji)
+bgcolor(highest(C_Doji_doji?1:0, C_DojiNumberOfCandles_doji)!=0 ? color.gray : na, offset=-(C_DojiNumberOfCandles_doji-1))
+//Hammer and Hanging man
+isGreenCandle() => 
+    if close > open
+        true
+    else
+        false
+lowerShadow() => 
+    if isGreenCandle()
+        open - low
+    else 
+        close - low
+upperShadow() => 
+    if isGreenCandle()
+        high - close
+    else 
+        high - open
+realBody() => 
+    abs(close - open)
+hammerAndHangingMan=(lowerShadow() > 2 * realBody() and upperShadow() < realBody())
+plotshape(hammerAndHangingMan,  title= "Hanging Man", location=location.belowbar, color=color.purple, style=shape.triangleup, text="HR/HM")
+//Shooting star
+fibLevel = input(title="Fib Level", type=input.float, defval=0.333)
+colorFilter = input(title="Color Must Match", type=input.bool, defval=false)
+// Calculate fibonacci level for current candle
+bullFib = (low - high) * fibLevel + high
+bearFib = (high - low) * fibLevel + low
+// Determine which price source closes or opens highest/lowest
+lowestBody = close < open ? close : open
+highestBody = close > open ? close : open
+// Determine if we have a valid hammer or shooting star
+hammerCandle = lowestBody >= bullFib and (not colorFilter or close > open)
+starCandle = highestBody <= bearFib and (not colorFilter or close < open)
+// Plot the signals to the chart
+plotshape(hammerCandle, style=shape.arrowup, location=location.belowbar, color=color.green, text="HR")
+plotshape(starCandle, style=shape.arrowdown, location=location.abovebar, color=color.red, text="SS")
+//Evening Star & Morning Star 
+getCandleRange(x) =>
+    candleRange = high[x] - low[x]
+    candleRange
+getCandleBody(x) =>
+    candleRange = abs(close[x] - open[x])
+    candleRange
+r2  = getCandleRange(2)
+b2  = getCandleBody(2)
+r1  = getCandleRange(1)
+b1  = getCandleBody(1)
+r0  = getCandleRange(0)
+b0  = getCandleBody(0)
+evening_star        = (b2 > (r2*0.5)) and (b1 < b2)  and (b0 > b1) and close < open and close[2] > open[2] and open[1] > close[2] and open < close[1]
+morning_star        = (b2 > (r2*0.5)) and  (b0 > (r0*0.5)) and (b0 > b1) and close > open and close[2] < open[2] and open[1] < close[2] and open > close[1]
+plotshape(evening_star,  title= "Evening star", location=location.abovebar, color=color.red, style=shape.triangledown, text="ES", offset = -1)
+plotshape(morning_star,  title= "Morning star", location=location.belowbar, color=color.green, style=shape.triangleup, text="MS", offset = -1)
+//Bullish/Bearish Engulfing
+bullishEngulfing=(open[1] > close[1] and close > open and close[1] >= open and open[1] < close)
+plotshape(bullishEngulfing,  title= "Bullish Engulfing", location=location.belowbar, color=color.green, style=shape.triangleup, text="BuE")
+bearishEngulfing=(close[1] > open[1] and open > close and close[1] <= open and close < open[1])
+plotshape(bearishEngulfing,  title= "Bullish Engulfing", location=location.abovebar, color=color.red, style=shape.triangledown, text="BeE")
+//Harami Pattern
+data6=(close[1] > open[1] and open > close and open <= close[1] and open[1] <= close and open - close < close[1] - open[1] )
+plotshape(data6, title= "Bearish Harami",  color=color.red, style=shape.arrowdown, text="BeH")
+data7=(open[1] > close[1] and close > open and close <= open[1] and close[1] <= open and close - open < open[1] - close[1] )
+plotshape(data7,  title= "Bullish Harami", location=location.belowbar, color=color.lime, style=shape.arrowup, text="BuH")
+//Condition 2: Prior Trend
+ema5 = ema(close, 5)
+ema10 = ema(close, 10)
+bullish = ema5>ema10
+bearish = ema5<ema10
+// plotshape(bullish, title="Bullish Trend", style=shape.triangleup, location=location.abovebar, color=color.green, transp=0, textcolor=color.green)
+// plotshape(bearish, title="Bearish Trend", style=shape.triangledown, location=location.belowbar, color=color.red, transp=0, textcolor=color.red)
+mycolor = bullish ? color.green : bearish ? color.red : color.blue
+plot(ema5, title="EMA", color=mycolor, linewidth=3)
+//Condition 3: Above average volumes on the trading day
+ten_day_avg_vol = sma(volume, 10)
+above_avg = volume > ten_day_avg_vol
+below_avg = volume < ten_day_avg_vol
+bullcandle = close>open
+bearcandle = close<open
+plotcandle(bullcandle and above_avg ? open:na, bullcandle ? high:na, bullcandle ? low:na, bullcandle ? close:na, color=color.green, bordercolor=color.orange)
+plotcandle(bearcandle and above_avg? open:na, bearcandle ? high:na, bearcandle ? low:na, bearcandle ? close:na, color=color.red, bordercolor=color.orange)
+plotcandle(bullcandle and below_avg ? open:na, bullcandle ? high:na, bullcandle ? low:na, bullcandle ? close:na, color=color.green, bordercolor=color.purple)
+plotcandle(bearcandle and below_avg? open:na, bearcandle ? high:na, bearcandle ? low:na, bearcandle ? close:na, color=color.red, bordercolor=color.purple)
+//Condition 4: Support and Resistance levels
+//the support level is plotted on the graph using in-built indicators
+//Condition 5: Dow theory patterns
+//Condition 6: RRR
+//Condition 7: Indicators: MACD and RSI

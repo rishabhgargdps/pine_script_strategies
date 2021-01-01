@@ -1,0 +1,25 @@
+//@version=4
+study("RSI+Engulfing alert", overlay=true)
+//Generating RSI Indicators
+//Get user input
+rsiSource = input(title="RSI Source", type=input.source, defval=close)
+rsiLength = input(title="RSI Length", type=input.integer, defval=14)
+rsiOverbought = input(title="RSI Overbought level", type=input.integer, defval=80)
+rsiOversold = input(title="RSI Oversold level", type=input.integer, defval=20)
+//Get RSI Value
+rsiValue = rsi(rsiSource, rsiLength)
+isRsiOB = rsiValue >= rsiOverbought
+isRsiOS = rsiValue <= rsiOversold
+//Plot signals to the chart
+plotshape(isRsiOB, title="Overbought", location=location.abovebar, color = color.red, transp=0, style=shape.triangledown, text="OB")
+plotshape(isRsiOS, title="Oversold", location=location.belowbar, color=color.green, transp=0, style=shape.triangleup, text="OS")
+//Engulfing check
+bullishEC=close>=open[1] and open[1]>close[1] and open<close[1]
+bearishEC=close<=open[1] and open[1]<close[1] and open>close[1]
+plotshape(bullishEC, title="Bullish Engulfing", location=location.abovebar, color=color.green, transp=0, style=shape.triangledown, text="BLEC")
+plotshape(bearishEC, title="Bearish Engulfing", location=location.belowbar, color=color.red, transp=0, style=shape.triangleup, text="BREC")
+tradeSignal=((isRsiOB or isRsiOB[1]) and bearishEC) or ((isRsiOS or isRsiOS[1]) and bullishEC)
+plotshape(tradeSignal and bearishEC, title="Short", location=location.abovebar, color=color.white, transp=0, style=shape.arrowdown, text="Short")
+plotshape(tradeSignal and bullishEC, title="Buy", location=location.belowbar, color=color.blue, transp=0, style=shape.arrowup, text="Buy")
+//Alert signal generation
+alertcondition(tradeSignal, title="RSI Signal+Engulfing", message="RSI Signal Detected for {{ticker}} along with engulfing pattern")
